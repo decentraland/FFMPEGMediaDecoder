@@ -2,30 +2,18 @@
 
 #pragma once
 
-// Which platform we are on?
-#if _MSC_VER
-#define UNITY_WIN 1
-#endif
-
-// Which graphics device APIs we possibly support?
-#if UNITY_WIN
-#define SUPPORT_D3D11 1 
-#endif
-
-#if SUPPORT_D3D11
-#	include <d3d11.h>
-#	include "Unity\IUnityGraphicsD3D11.h"
-#endif
-
 extern "C" {
+	// Utils
+	__declspec(dllexport) void nativeCleanAll();
 	//	Decoder
 	__declspec(dllexport) int nativeCreateDecoder(const char* filePath, int& id);
 	__declspec(dllexport) int nativeCreateDecoderAsync(const char* filePath, int& id);
 	__declspec(dllexport) int nativeGetDecoderState(int id);
-	__declspec(dllexport) void nativeCreateTexture(int id, void*& tex0, void*& tex1, void*& tex2);
 	__declspec(dllexport) bool nativeStartDecoding(int id);
 	__declspec(dllexport) void nativeDestroyDecoder(int id);
 	__declspec(dllexport) bool nativeIsEOF(int id);
+	__declspec(dllexport) void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady);
+	__declspec(dllexport) void nativeReleaseVideoFrame(int id);
 	//	Video
 	__declspec(dllexport) bool nativeIsVideoEnabled(int id);
 	__declspec(dllexport) void nativeSetVideoEnable(int id, bool isEnable);
@@ -46,5 +34,4 @@ extern "C" {
 	__declspec(dllexport) bool nativeIsSeekOver(int id);
 	//  Utility
 	__declspec(dllexport) int nativeGetMetaData(const char* filePath, char*** key, char*** value);
-	__declspec(dllexport) void nativeLoadThumbnail(int id, float time, void* texY, void* texU, void* texV);
 }

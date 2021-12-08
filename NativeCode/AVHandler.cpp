@@ -11,7 +11,7 @@ AVHandler::AVHandler() {
 }
 
 void AVHandler::init(const char* filePath) {
-	if (mIDecoder == NULL || !mIDecoder->init(filePath)) {
+	if (mIDecoder == nullptr || !mIDecoder->init(filePath)) {
 		mDecoderState = INIT_FAIL;
 	} else {
 		mDecoderState = INITIALIZED;
@@ -28,24 +28,24 @@ void AVHandler::stopDecoding() {
 		mDecodeThread.join();
 	}
 
-	mIDecoder = NULL;
+	mIDecoder = nullptr;
 	mDecoderState = UNINITIALIZED;
 }
 
-double AVHandler::getVideoFrame(uint8_t** outputY, uint8_t** outputU, uint8_t** outputV) {
-	if (mIDecoder == NULL || !mIDecoder->getVideoInfo().isEnabled || mDecoderState == SEEK) {
+double AVHandler::getVideoFrame(void** frameData) {
+	if (mIDecoder == nullptr || !mIDecoder->getVideoInfo().isEnabled || mDecoderState == SEEK) {
 		LOG("Video is not available. \n");
-		*outputY = *outputU = *outputV = NULL;
+		*frameData = nullptr;
 		return -1;
 	}
 
-	return mIDecoder->getVideoFrame(outputY, outputU, outputV);
+	return mIDecoder->getVideoFrame(frameData);
 }
 
 double AVHandler::getAudioFrame(uint8_t** outputFrame, int& frameSize) {
-	if (mIDecoder == NULL || !mIDecoder->getAudioInfo().isEnabled || mDecoderState == SEEK) {
+	if (mIDecoder == nullptr || !mIDecoder->getAudioInfo().isEnabled || mDecoderState == SEEK) {
 		LOG("Audio is not available. \n");
-		*outputFrame = NULL;
+		*outputFrame = nullptr;
 		return -1;
 	}
 	
@@ -53,7 +53,7 @@ double AVHandler::getAudioFrame(uint8_t** outputFrame, int& frameSize) {
 }
 
 void AVHandler::freeVideoFrame() {
-	if (mIDecoder == NULL || !mIDecoder->getVideoInfo().isEnabled || mDecoderState == SEEK) {
+	if (mIDecoder == nullptr || !mIDecoder->getVideoInfo().isEnabled || mDecoderState == SEEK) {
 		LOG("Video is not available. \n");
 		return;
 	}
@@ -62,7 +62,7 @@ void AVHandler::freeVideoFrame() {
 }
 
 void AVHandler::freeAudioFrame() {
-	if (mIDecoder == NULL || !mIDecoder->getAudioInfo().isEnabled || mDecoderState == SEEK) {
+	if (mIDecoder == nullptr || !mIDecoder->getAudioInfo().isEnabled || mDecoderState == SEEK) {
 		LOG("Audio is not available. \n");
 		return;
 	}
@@ -71,7 +71,7 @@ void AVHandler::freeAudioFrame() {
 }
 
 void AVHandler::startDecoding() {
-	if (mIDecoder == NULL || mDecoderState != INITIALIZED) {
+	if (mIDecoder == nullptr || mDecoderState != INITIALIZED) {
 		LOG("Not initialized, decode thread would not start. \n");
 		return;
 	}
@@ -125,19 +125,19 @@ IDecoder::AudioInfo AVHandler::getAudioInfo() {
 }
 
 bool AVHandler::isVideoBufferEmpty() {
-	IDecoder::VideoInfo* videoInfo = &(mIDecoder->getVideoInfo());
+	IDecoder::VideoInfo videoInfo = mIDecoder->getVideoInfo();
 	IDecoder::BufferState EMPTY = IDecoder::BufferState::EMPTY;
-	return videoInfo->isEnabled && videoInfo->bufferState == EMPTY;
+	return videoInfo.isEnabled && videoInfo.bufferState == EMPTY;
 }
 
 bool AVHandler::isVideoBufferFull() {
-	IDecoder::VideoInfo* videoInfo = &(mIDecoder->getVideoInfo());
+	IDecoder::VideoInfo videoInfo = mIDecoder->getVideoInfo();
 	IDecoder::BufferState FULL = IDecoder::BufferState::FULL;
-	return videoInfo->isEnabled && videoInfo->bufferState == FULL;
+	return videoInfo.isEnabled && videoInfo.bufferState == FULL;
 }
 
 int AVHandler::getMetaData(char**& key, char**& value) {
-	if (mIDecoder == NULL ||mDecoderState <= UNINITIALIZED) {
+	if (mIDecoder == nullptr ||mDecoderState <= UNINITIALIZED) {
 		return 0;
 	}
 	
@@ -145,7 +145,7 @@ int AVHandler::getMetaData(char**& key, char**& value) {
 }
 
 void AVHandler::setVideoEnable(bool isEnable) {
-	if (mIDecoder == NULL) {
+	if (mIDecoder == nullptr) {
 		return;
 	}
 
@@ -153,7 +153,7 @@ void AVHandler::setVideoEnable(bool isEnable) {
 }
 
 void AVHandler::setAudioEnable(bool isEnable) {
-	if (mIDecoder == NULL) {
+	if (mIDecoder == nullptr) {
 		return;
 	}
 
@@ -161,7 +161,7 @@ void AVHandler::setAudioEnable(bool isEnable) {
 }
 
 void AVHandler::setAudioAllChDataEnable(bool isEnable) {
-	if (mIDecoder == NULL) {
+	if (mIDecoder == nullptr) {
 		return;
 	}
 

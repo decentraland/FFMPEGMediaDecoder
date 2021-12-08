@@ -6,8 +6,9 @@
 #include <mutex>
 
 extern "C" {
-#include <libavformat\avformat.h>
-#include <libswresample\swresample.h>
+#include <libavformat/avformat.h>
+#include <libswresample/swresample.h>
+#include <libswscale/swscale.h>
 }
 
 class DecoderFFmpeg : public virtual IDecoder
@@ -26,8 +27,8 @@ public:
 	void setVideoEnable(bool isEnable);
 	void setAudioEnable(bool isEnable);
 	void setAudioAllChDataEnable(bool isEnable);
-	double	getVideoFrame(unsigned char** outputY, unsigned char** outputU, unsigned char** outputV);
-	double	getAudioFrame(unsigned char** outputFrame, int& frameSize);
+	double getVideoFrame(void** frameData);
+	double getAudioFrame(unsigned char** outputFrame, int& frameSize);
 	void freeVideoFrame();
 	void freeAudioFrame();
 

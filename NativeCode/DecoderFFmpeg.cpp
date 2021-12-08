@@ -6,16 +6,16 @@
 #include <string>
 
 DecoderFFmpeg::DecoderFFmpeg() {
-	mAVFormatContext = NULL;
-	mVideoStream = NULL;
-	mAudioStream = NULL;
-	mVideoCodec = NULL;
-	mAudioCodec = NULL;
-	mVideoCodecContext = NULL;
-	mAudioCodecContext = NULL;
+	mAVFormatContext = nullptr;
+	mVideoStream = nullptr;
+	mAudioStream = nullptr;
+	mVideoCodec = nullptr;
+	mAudioCodec = nullptr;
+	mVideoCodecContext = nullptr;
+	mAudioCodecContext = nullptr;
 	av_init_packet(&mPacket);
 
-	mSwrContext = NULL;
+	mSwrContext = nullptr;
 
 	mVideoBuffMax = 64;
 	mAudioBuffMax = 128;
@@ -38,14 +38,14 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		return true;
 	}
 
-	if (filePath == NULL) {
-		LOG("File path is NULL. \n");
+	if (filePath == nullptr) {
+		LOG("File path is nullptr. \n");
 		return false;
 	}
 
 	av_register_all();
 
-	if (mAVFormatContext == NULL) {
+	if (mAVFormatContext == nullptr) {
 		mAVFormatContext = avformat_alloc_context();
 	}
 
@@ -60,12 +60,12 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		mIsSeekToAny = false;
 	}
 
-	AVDictionary* opts = NULL;
+	AVDictionary* opts = nullptr;
 	if (mUseTCP) {
 		av_dict_set(&opts, "rtsp_transport", "tcp", 0);
 	}
 	
-	errorCode = avformat_open_input(&mAVFormatContext, filePath, NULL, &opts);
+	errorCode = avformat_open_input(&mAVFormatContext, filePath, nullptr, &opts);
 	av_dict_free(&opts);
 	if (errorCode < 0) {
 		LOG("avformat_open_input error(%x). \n", errorCode);
@@ -73,7 +73,7 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		return false;
 	}
 
-	errorCode = avformat_find_stream_info(mAVFormatContext, NULL);
+	errorCode = avformat_find_stream_info(mAVFormatContext, nullptr);
 	if (errorCode < 0) {
 		LOG("avformat_find_stream_info error(%x). \n", errorCode);
 		printErrorMsg(errorCode);
@@ -83,7 +83,7 @@ bool DecoderFFmpeg::init(const char* filePath) {
 	double ctxDuration = (double)(mAVFormatContext->duration) / AV_TIME_BASE;
 
 	/* Video initialization */
-	int videoStreamIndex = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+	int videoStreamIndex = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
 	if (videoStreamIndex < 0) {
 		LOG("video stream not found. \n");
 		mVideoInfo.isEnabled = false;
@@ -94,7 +94,7 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		mVideoCodecContext->refcounted_frames = 1;
 		mVideoCodec = avcodec_find_decoder(mVideoCodecContext->codec_id);
 		
-		if (mVideoCodec == NULL) {
+		if (mVideoCodec == nullptr) {
 			LOG("Video codec not available. \n");
 			return false;
 		}
@@ -114,11 +114,11 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		mVideoInfo.height = mVideoCodecContext->height;
 		mVideoInfo.totalTime = mVideoStream->duration <= 0 ? ctxDuration : mVideoStream->duration * av_q2d(mVideoStream->time_base);
 
-		mVideoFrames.swap(decltype(mVideoFrames)());
+		//mVideoFrames.swap(decltype(mVideoFrames)());
 	}
 
 	/* Audio initialization */
-	int audioStreamIndex = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
+	int audioStreamIndex = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
 	if (audioStreamIndex < 0) {
 		LOG("audio stream not found. \n");
 		mAudioInfo.isEnabled = false;
@@ -128,12 +128,12 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		mAudioCodecContext = mAudioStream->codec;
 		mAudioCodec = avcodec_find_decoder(mAudioCodecContext->codec_id);
 
-		if (mAudioCodec == NULL) {
+		if (mAudioCodec == nullptr) {
 			LOG("Audio codec not available. \n");
 			return false;
 		}
 
-		errorCode = avcodec_open2(mAudioCodecContext, mAudioCodec, NULL);
+		errorCode = avcodec_open2(mAudioCodecContext, mAudioCodec, nullptr);
 		if (errorCode < 0) {
 			LOG("Could not open audio codec(%x). \n", errorCode);
 			printErrorMsg(errorCode);
@@ -147,7 +147,7 @@ bool DecoderFFmpeg::init(const char* filePath) {
 			return false;
 		}
 
-		mAudioFrames.swap(decltype(mAudioFrames)());
+		//mAudioFrames.swap(decltype(mAudioFrames)());
 	}
 
 	mIsInitialized = true;
@@ -189,7 +189,7 @@ IDecoder::AudioInfo DecoderFFmpeg::getAudioInfo() {
 }
 
 void DecoderFFmpeg::setVideoEnable(bool isEnable) {
-	if (mVideoStream == NULL) {
+	if (mVideoStream == nullptr) {
 		LOG("Video stream not found. \n");
 		return;
 	}
@@ -198,7 +198,7 @@ void DecoderFFmpeg::setVideoEnable(bool isEnable) {
 }
 
 void DecoderFFmpeg::setAudioEnable(bool isEnable) {
-	if (mAudioStream == NULL) {
+	if (mAudioStream == nullptr) {
 		LOG("Audio stream not found. \n");
 		return;
 	}
@@ -212,7 +212,7 @@ void DecoderFFmpeg::setAudioAllChDataEnable(bool isEnable) {
 }
 
 int DecoderFFmpeg::initSwrContext() {
-	if (mAudioCodecContext == NULL) {
+	if (mAudioCodecContext == nullptr) {
 		LOG("Audio context is null. \n");
 		return -1;
 	}
@@ -225,16 +225,16 @@ int DecoderFFmpeg::initSwrContext() {
 	int inSampleRate = mAudioCodecContext->sample_rate;
 	int outSampleRate = inSampleRate;
 
-	if (mSwrContext != NULL) {
+	if (mSwrContext != nullptr) {
 		swr_close(mSwrContext);
 		swr_free(&mSwrContext);
-		mSwrContext = NULL;
+		mSwrContext = nullptr;
 	}
 
-	mSwrContext = swr_alloc_set_opts(NULL,
+	mSwrContext = swr_alloc_set_opts(nullptr,
 		outChannelLayout, outSampleFormat, outSampleRate,
 		inChannelLayout, inSampleFormat, inSampleRate,
-		0, NULL);
+		0, nullptr);
 
 	
 	if (swr_is_initialized(mSwrContext) == 0) {
@@ -249,19 +249,17 @@ int DecoderFFmpeg::initSwrContext() {
 	return errorCode;
 }
 
-double DecoderFFmpeg::getVideoFrame(unsigned char** outputY, unsigned char** outputU, unsigned char** outputV) {
+double DecoderFFmpeg::getVideoFrame(void** frameData) {
 	std::lock_guard<std::mutex> lock(mVideoMutex);
 	
 	if (!mIsInitialized || mVideoFrames.size() == 0) {
 		LOG("Video frame not available. \n");
-		*outputY = *outputU = *outputV = NULL;
+        *frameData = nullptr;
 		return -1;
 	}
 
 	AVFrame* frame = mVideoFrames.front();
-	*outputY = frame->data[0];
-	*outputU = frame->data[1];
-	*outputV = frame->data[2];
+	*frameData = frame->data[0];
 
 	int64_t timeStamp = av_frame_get_best_effort_timestamp(frame);
 	double timeInSec = av_q2d(mVideoStream->time_base) * timeStamp;
@@ -274,7 +272,7 @@ double DecoderFFmpeg::getAudioFrame(unsigned char** outputFrame, int& frameSize)
 	std::lock_guard<std::mutex> lock(mAudioMutex);
 	if (!mIsInitialized || mAudioFrames.size() == 0) {
 		LOG("Audio frame not available. \n");
-		*outputFrame = NULL;
+		*outputFrame = nullptr;
 		return -1;
 	}
 
@@ -302,7 +300,7 @@ void DecoderFFmpeg::seek(double time) {
 	}
 
 	if (mVideoInfo.isEnabled) {
-		if (mVideoCodecContext != NULL) {
+		if (mVideoCodecContext != nullptr) {
 			avcodec_flush_buffers(mVideoCodecContext);
 		}
 		flushBuffer(&mVideoFrames, &mVideoMutex);
@@ -310,7 +308,7 @@ void DecoderFFmpeg::seek(double time) {
 	}
 	
 	if (mAudioInfo.isEnabled) {
-		if (mAudioCodecContext != NULL) {
+		if (mAudioCodecContext != nullptr) {
 			avcodec_flush_buffers(mAudioCodecContext);
 		}
 		flushBuffer(&mAudioFrames, &mAudioMutex);
@@ -319,11 +317,11 @@ void DecoderFFmpeg::seek(double time) {
 }
 
 int DecoderFFmpeg::getMetaData(char**& key, char**& value) {
-	if (!mIsInitialized || key != NULL || value != NULL) {
+	if (!mIsInitialized || key != nullptr || value != nullptr) {
 		return 0;
 	}
 
-	AVDictionaryEntry *tag = NULL;
+	AVDictionaryEntry *tag = nullptr;
 	int metaCount = av_dict_count(mAVFormatContext->metadata);
 
 	key = (char**)malloc(sizeof(char*) * metaCount);
@@ -339,36 +337,36 @@ int DecoderFFmpeg::getMetaData(char**& key, char**& value) {
 }
 
 void DecoderFFmpeg::destroy() {
-	if (mVideoCodecContext != NULL) {
+	if (mVideoCodecContext != nullptr) {
 		avcodec_close(mVideoCodecContext);
-		mVideoCodecContext = NULL;
+		mVideoCodecContext = nullptr;
 	}
 	
-	if (mAudioCodecContext != NULL) {
+	if (mAudioCodecContext != nullptr) {
 		avcodec_close(mAudioCodecContext);
-		mAudioCodecContext = NULL;
+		mAudioCodecContext = nullptr;
 	}
 	
-	if (mAVFormatContext != NULL) {
+	if (mAVFormatContext != nullptr) {
 		avformat_close_input(&mAVFormatContext);
 		avformat_free_context(mAVFormatContext);
-		mAVFormatContext = NULL;
+		mAVFormatContext = nullptr;
 	}
 	
-	if (mSwrContext != NULL) {
+	if (mSwrContext != nullptr) {
 		swr_close(mSwrContext);
 		swr_free(&mSwrContext);
-		mSwrContext = NULL;
+		mSwrContext = nullptr;
 	}
 	
 	flushBuffer(&mVideoFrames, &mVideoMutex);
 	flushBuffer(&mAudioFrames, &mAudioMutex);
 	
-	mVideoCodec = NULL;
-	mAudioCodec = NULL;
+	mVideoCodec = nullptr;
+	mAudioCodec = nullptr;
 	
-	mVideoStream = NULL;
-	mAudioStream = NULL;
+	mVideoStream = nullptr;
+	mAudioStream = nullptr;
 	av_packet_unref(&mPacket);
 	
 	memset(&mVideoInfo, 0, sizeof(VideoInfo));
@@ -397,17 +395,49 @@ bool DecoderFFmpeg::isBuffBlocked() {
 
 void DecoderFFmpeg::updateVideoFrame() {
 	int isFrameAvailable = 0;
-	AVFrame* frame = av_frame_alloc();
+	AVFrame* srcFrame = av_frame_alloc();
 	clock_t start = clock();
-	if (avcodec_decode_video2(mVideoCodecContext, frame, &isFrameAvailable, &mPacket) < 0) {
+	if (avcodec_decode_video2(mVideoCodecContext, srcFrame, &isFrameAvailable, &mPacket) < 0) {
 		LOG("Error processing data. \n");
 		return;
 	}
-	LOG("updateVideoFrame = %f\n", (float)(clock() - start) / CLOCKS_PER_SEC);
 
 	if (isFrameAvailable) {
+        int width = srcFrame->width;
+        int height = srcFrame->height;
+
+        const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
+        AVFrame* dstFrame = av_frame_alloc();
+        av_frame_copy_props(dstFrame, srcFrame);
+
+        int numBytes = avpicture_get_size(dstFormat, width, height);
+        AVBufferRef* buffer = av_buffer_alloc(numBytes*sizeof(uint8_t));
+        avpicture_fill((AVPicture *)dstFrame, buffer->data, dstFormat, width, height);
+        dstFrame->buf[0] = buffer;
+
+        SwsContext* conversion = sws_getContext(width,
+                                                height,
+                                                (AVPixelFormat)srcFrame->format,
+                                                width,
+                                                height,
+                                                dstFormat,
+                                                SWS_FAST_BILINEAR,
+                                                nullptr,
+                                                nullptr,
+                                                nullptr);
+        sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
+        sws_freeContext(conversion);
+
+        dstFrame->format = dstFormat;
+        dstFrame->width = srcFrame->width;
+        dstFrame->height = srcFrame->height;
+
+        av_frame_free(&srcFrame);
+
+        LOG("updateVideoFrame = %f\n", (float)(clock() - start) / CLOCKS_PER_SEC);
+
 		std::lock_guard<std::mutex> lock(mVideoMutex);
-		mVideoFrames.push(frame);
+		mVideoFrames.push(dstFrame);
 		updateBufferState();
 	}
 }

@@ -21,7 +21,7 @@ public:
 	void stopDecoding();
 	void setSeekTime(float sec);
 	
-	double getVideoFrame(uint8_t** outputY, uint8_t** outputU, uint8_t** outputV);
+	double getVideoFrame(void** frameData);
 	double getAudioFrame(uint8_t** outputFrame, int& frameSize);
 	void freeVideoFrame();
 	void freeAudioFrame();
