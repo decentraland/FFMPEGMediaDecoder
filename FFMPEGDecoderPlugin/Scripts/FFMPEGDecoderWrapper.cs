@@ -9,6 +9,7 @@ namespace HTC.UnityPlugin.Multimedia
 
         [DllImport(NATIVE_LIBRARY_NAME)]
         public static extern void nativeCleanAll();
+
         //  Decoder
         [DllImport(NATIVE_LIBRARY_NAME)]
         public static extern int nativeCreateDecoder(string filePath, ref int id);
@@ -33,13 +34,13 @@ namespace HTC.UnityPlugin.Multimedia
 
         [DllImport(NATIVE_LIBRARY_NAME)]
         public static extern bool nativeIsEOF(int id);
-        
+
         [DllImport(NATIVE_LIBRARY_NAME)]
         public static extern bool nativeGrabVideoFrame(int id, ref IntPtr frameDataPtr, ref bool frameReady);
 
         [DllImport(NATIVE_LIBRARY_NAME)]
         public static extern bool nativeReleaseVideoFrame(int id);
-        
+
         //  Video
         [DllImport(NATIVE_LIBRARY_NAME)]
         public static extern bool nativeIsVideoEnabled(int id);
@@ -83,7 +84,7 @@ namespace HTC.UnityPlugin.Multimedia
         public static extern bool nativeIsSeekOver(int id);
 
         //  Utility
-        [DllImport (NATIVE_LIBRARY_NAME)]
+        [DllImport(NATIVE_LIBRARY_NAME)]
         public static extern int nativeGetMetaData(string filePath, out IntPtr key, out IntPtr value);
     }
 }
