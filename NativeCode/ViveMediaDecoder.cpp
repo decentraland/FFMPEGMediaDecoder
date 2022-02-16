@@ -15,6 +15,7 @@ typedef struct _VideoContext {
 	std::string path = "";
     std::thread initThread;
     bool initThreadRunning = false;
+    bool destroying = false;
     std::unique_ptr<AVHandler> avhandler = nullptr;
 	float progressTime = 0.0f;
 	float lastUpdateTime = -1.0f;
@@ -51,6 +52,19 @@ void nativeCleanAll() {
     std::list<int> idList;
     for(auto videoCtx : videoContexts) {
         idList.push_back(videoCtx->id);
+    }
+
+    for(int id : idList) {
+        nativeDestroyDecoder(id);
+    }
+}
+
+void nativeCleanDestroyedDecoders() {
+    std::list<int> idList;
+    for(auto videoCtx : videoContexts) {
+        if (videoCtx->destroying && !videoCtx->avhandler->isDecoderRunning() && !videoCtx->initThreadRunning) {
+            idList.push_back(videoCtx->id);
+        }
     }
 
     for(int id : idList) {
@@ -135,12 +149,7 @@ void nativeScheduleDestroyDecoder(int id) {
     std::shared_ptr<VideoContext> videoCtx;
     if (!getVideoContext(id, videoCtx)) { return; }
     videoCtx->avhandler->stop(); // Async
-}
-
-bool nativeIsReadyToBeDestroyed(int id) {
-    std::shared_ptr<VideoContext> videoCtx;
-    if (!getVideoContext(id, videoCtx)) { return false; }
-    return !videoCtx->avhandler->isDecoderRunning() && !videoCtx->initThreadRunning;
+    videoCtx->destroying = true;
 }
 
 void nativeDestroyDecoder(int id) {
