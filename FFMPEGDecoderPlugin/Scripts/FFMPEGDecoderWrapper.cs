@@ -10,6 +10,9 @@ namespace HTC.UnityPlugin.Multimedia
         [DllImport(NATIVE_LIBRARY_NAME)]
         public static extern void nativeCleanAll();
 
+        [DllImport(NATIVE_LIBRARY_NAME)]
+        public static extern void nativeCleanDestroyedDecoders();
+
         //  Decoder
         [DllImport(NATIVE_LIBRARY_NAME)]
         public static extern int nativeCreateDecoder(string filePath, ref int id);
@@ -22,6 +25,9 @@ namespace HTC.UnityPlugin.Multimedia
 
         [DllImport(NATIVE_LIBRARY_NAME)]
         public static extern bool nativeStartDecoding(int id);
+
+        [DllImport(NATIVE_LIBRARY_NAME)]
+        public static extern void nativeScheduleDestroyDecoder(int id);
 
         [DllImport(NATIVE_LIBRARY_NAME)]
         public static extern void nativeDestroyDecoder(int id);

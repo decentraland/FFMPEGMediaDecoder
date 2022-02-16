@@ -566,7 +566,7 @@ namespace HTC.UnityPlugin.Multimedia
                             }
                 }
 
-                FFMPEGDecoderWrapper.nativeDestroyDecoder(decoderID);
+                FFMPEGDecoderWrapper.nativeScheduleDestroyDecoder(decoderID);
                 decoderID = -1;
                 decoderState = DecoderState.NOT_INITIALIZED;
 
