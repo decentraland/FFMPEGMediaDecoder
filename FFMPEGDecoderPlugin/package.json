@@ -1,0 +1,20 @@
+{
+  "name": "com.mediadecoder.ffmpeg",
+  "version": "1.0.0",
+  "displayName": "FFMPEGMediaDecoder",
+  "description": "FFMPEGMediaDecoder",
+  "unity": "2020.3",
+  "unityRelease": "0f1",
+  "gitDependencies": {
+  },
+  "dependencies": {
+  },
+  "testables": [
+
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/decentraland/FFMPEGMediaDecoder.git"
+  },
+  "keywords": []
+}

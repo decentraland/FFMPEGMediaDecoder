@@ -3,17 +3,19 @@
 #pragma once
 
 extern "C" {
-	// Utils
-	__declspec(dllexport) void nativeCleanAll();
+    // Utils
+    __declspec(dllexport) void nativeCleanAll();
 	//	Decoder
 	__declspec(dllexport) int nativeCreateDecoder(const char* filePath, int& id);
 	__declspec(dllexport) int nativeCreateDecoderAsync(const char* filePath, int& id);
 	__declspec(dllexport) int nativeGetDecoderState(int id);
 	__declspec(dllexport) bool nativeStartDecoding(int id);
+    __declspec(dllexport) void nativeScheduleDestroyDecoder(int id);
+    __declspec(dllexport) bool nativeIsReadyToBeDestroyed(int id);
 	__declspec(dllexport) void nativeDestroyDecoder(int id);
 	__declspec(dllexport) bool nativeIsEOF(int id);
-	__declspec(dllexport) void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady);
-	__declspec(dllexport) void nativeReleaseVideoFrame(int id);
+    __declspec(dllexport) void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady);
+    __declspec(dllexport) void nativeReleaseVideoFrame(int id);
 	//	Video
 	__declspec(dllexport) bool nativeIsVideoEnabled(int id);
 	__declspec(dllexport) void nativeSetVideoEnable(int id, bool isEnable);

@@ -14,7 +14,8 @@ typedef struct _VideoContext {
 	int id = -1;
 	std::string path = "";
     std::thread initThread;
-    std::shared_ptr<AVHandler> avhandler = nullptr;
+    bool initThreadRunning = false;
+    std::unique_ptr<AVHandler> avhandler = nullptr;
 	float progressTime = 0.0f;
 	float lastUpdateTime = -1.0f;
     bool videoFrameLocked = false;
@@ -53,7 +54,7 @@ void nativeCleanAll() {
     }
 
     for(int id : idList) {
-        removeVideoContext(id);
+        nativeDestroyDecoder(id);
     }
 }
 
@@ -65,14 +66,16 @@ int nativeCreateDecoderAsync(const char* filePath, int& id) {
 	while (getVideoContext(newID, videoCtx)) { newID++; }
 
 	videoCtx = std::make_shared<VideoContext>();
-	videoCtx->avhandler = std::make_shared<AVHandler>();
+	videoCtx->avhandler = std::make_unique<AVHandler>();
 	videoCtx->id = newID;
 	id = videoCtx->id;
 	videoCtx->path = std::string(filePath);
 	videoCtx->isContentReady = false;
 
+    videoCtx->initThreadRunning = true;
 	videoCtx->initThread = std::thread([videoCtx]() {
 		videoCtx->avhandler->init(videoCtx->path.c_str());
+        videoCtx->initThreadRunning = false;
 	});
 
 	videoContexts.push_back(videoCtx);
@@ -89,7 +92,7 @@ int nativeCreateDecoder(const char* filePath, int& id) {
 	while (getVideoContext(newID, videoCtx)) { newID++; }
 
     videoCtx = std::make_shared<VideoContext>();
-    videoCtx->avhandler = std::make_shared<AVHandler>();
+    videoCtx->avhandler = std::make_unique<AVHandler>();
     videoCtx->id = newID;
     id = videoCtx->id;
     videoCtx->path = std::string(filePath);
@@ -116,7 +119,7 @@ bool nativeStartDecoding(int id) {
 		videoCtx->initThread.join();
 	}
 
-	auto avhandler = videoCtx->avhandler;
+	AVHandler* avhandler = videoCtx->avhandler.get();
 	if (avhandler->getDecoderState() >= AVHandler::DecoderState::INITIALIZED) {
 		avhandler->startDecoding();
 	}
@@ -128,6 +131,18 @@ bool nativeStartDecoding(int id) {
 	return true;
 }
 
+void nativeScheduleDestroyDecoder(int id) {
+    std::shared_ptr<VideoContext> videoCtx;
+    if (!getVideoContext(id, videoCtx)) { return; }
+    videoCtx->avhandler->stop(); // Async
+}
+
+bool nativeIsReadyToBeDestroyed(int id) {
+    std::shared_ptr<VideoContext> videoCtx;
+    if (!getVideoContext(id, videoCtx)) { return false; }
+    return !videoCtx->avhandler->isDecoderRunning() && !videoCtx->initThreadRunning;
+}
+
 void nativeDestroyDecoder(int id) {
     std::shared_ptr<VideoContext> videoCtx;
 	if (!getVideoContext(id, videoCtx)) { return; }
@@ -136,7 +151,7 @@ void nativeDestroyDecoder(int id) {
 		videoCtx->initThread.join();
 	}
 
-	videoCtx->avhandler = nullptr;
+	videoCtx->avhandler.reset();
 
 	videoCtx->path.clear();
 	videoCtx->progressTime = 0.0f;

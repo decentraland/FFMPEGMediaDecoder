@@ -6,8 +6,6 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
-set(CMAKE_PREFIX_PATH D:/decentraland/ffmpeg-dep/lib D:/decentraland/ffmpeg-dep/include)
-
 find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
 find_library(AVCODEC_LIBRARY avcodec)
 
