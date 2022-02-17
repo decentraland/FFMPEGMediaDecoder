@@ -84,9 +84,6 @@ namespace HTC.UnityPlugin.Multimedia
         public float videoTotalTime { get; private set; } //  Video duration.
         public float audioTotalTime { get; private set; } //  Audio duration.
 
-        private BackgroundWorker backgroundWorker;
-        private readonly object _lock = new object();
-
         private Coroutine decoderAsyncCoroutine;
         private Coroutine audioPlayCoroutine;
         private Coroutine videoPlayCoroutine;
@@ -352,54 +349,35 @@ namespace HTC.UnityPlugin.Multimedia
                 if (isAudioEnabled && !isAllAudioChEnabled)
                 {
                     audioPlayCoroutine = coroutineStarter.StartCoroutine(audioPlay());
-                    backgroundWorker = new BackgroundWorker();
-                    backgroundWorker.WorkerSupportsCancellation = true;
-                    backgroundWorker.DoWork += pullAudioData;
-                    backgroundWorker.RunWorkerAsync();
                 }
             }
         }
-
-        private void pullAudioData(object sender, DoWorkEventArgs e)
+        
+        float[] tempBuff = new float[0]; //	Buffer to copy audio data from dataPtr to audioDataBuff.
+        double lastTime = -1.0f; //	Avoid to schedule the same audio data set.
+        private void pullOnceAudioData()
         {
             var dataPtr = IntPtr.Zero; //	Pointer to get audio data from native.
-            var tempBuff = new float[0]; //	Buffer to copy audio data from dataPtr to audioDataBuff.
             var audioFrameLength = 0;
-            double lastTime = -1.0f; //	Avoid to schedule the same audio data set.
 
-            audioDataBuff = new List<float>();
-            while (decoderState >= DecoderState.START)
-                if (decoderState != DecoderState.SEEK_FRAME)
-                {
-                    double audioNativeTime =
-                        FFMPEGDecoderWrapper.nativeGetAudioData(decoderID, ref dataPtr, ref audioFrameLength);
-                    if (0 < audioNativeTime && lastTime != audioNativeTime && decoderState != DecoderState.SEEK_FRAME &&
-                        audioFrameLength != 0)
-                    {
-                        if (firstAudioFrameTime == -1.0) firstAudioFrameTime = audioNativeTime;
-
-                        lastTime = audioNativeTime;
-                        audioFrameLength *= audioChannels;
-                        if (tempBuff.Length !=
-                            audioFrameLength) //  For dynamic audio data length, reallocate the memory if needed.
-                            tempBuff = new float[audioFrameLength];
-                        Marshal.Copy(dataPtr, tempBuff, 0, audioFrameLength);
-                        lock (_lock)
-                        {
-                            audioDataBuff.AddRange(tempBuff);
-                        }
-                    }
-
-                    if (audioNativeTime != -1.0) FFMPEGDecoderWrapper.nativeFreeAudioData(decoderID);
-
-                    Thread.Sleep(2);
-                }
-
-            lock (_lock)
+            
+            double audioNativeTime =
+                FFMPEGDecoderWrapper.nativeGetAudioData(decoderID, ref dataPtr, ref audioFrameLength);
+            if (0 < audioNativeTime && lastTime != audioNativeTime && decoderState != DecoderState.SEEK_FRAME &&
+                audioFrameLength != 0 && dataPtr != IntPtr.Zero)
             {
-                audioDataBuff.Clear();
-                audioDataBuff = null;
+                if (firstAudioFrameTime == -1.0) firstAudioFrameTime = audioNativeTime;
+
+                lastTime = audioNativeTime;
+                audioFrameLength *= audioChannels;
+                if (tempBuff.Length !=
+                    audioFrameLength) //  For dynamic audio data length, reallocate the memory if needed.
+                    tempBuff = new float[audioFrameLength];
+                Marshal.Copy(dataPtr, tempBuff, 0, audioFrameLength);
+                audioDataBuff.AddRange(tempBuff);
             }
+
+            if (audioNativeTime != -1.0) FFMPEGDecoderWrapper.nativeFreeAudioData(decoderID);
         }
 
         private void ReleaseTexture()
@@ -473,8 +451,14 @@ namespace HTC.UnityPlugin.Multimedia
             if (VERBOSE) Debug.Log(LOG_TAG + " audioDataTime " + audioDataTime);
 
             audioProgressTime = -1.0; //  Used to schedule each audio clip to be played.
+            audioDataBuff = new List<float>();
             while (decoderState >= DecoderState.START)
             {
+                if (decoderState != DecoderState.SEEK_FRAME)
+                {
+                    pullOnceAudioData();
+                }
+
                 if (decoderState == DecoderState.START)
                 {
                     var currentTime = AudioSettings.dspTime - globalStartTime;
@@ -514,11 +498,8 @@ namespace HTC.UnityPlugin.Multimedia
                                 audioSource[swapIndex].time = (float) GetOverlapTime();
                                 audioProgressTime += audioDataTime;
                                 swapIndex = (swapIndex + 1) % SWAP_BUFFER_NUM;
-
-                                lock (_lock)
-                                {
-                                    audioDataBuff.RemoveRange(0, playedAudioDataLength);
-                                }
+                                
+                                audioDataBuff.RemoveRange(0, playedAudioDataLength);
                             }
                         }
                     }
@@ -528,10 +509,9 @@ namespace HTC.UnityPlugin.Multimedia
                         isAudioReadyToReplay = true;
                         audioProgressTime = firstAudioFrameTime = -1.0;
                         if (audioDataBuff != null)
-                            lock (_lock)
-                            {
-                                audioDataBuff.Clear();
-                            }
+                        {
+                            audioDataBuff.Clear();
+                        }
                     }
                 }
 
@@ -554,7 +534,6 @@ namespace HTC.UnityPlugin.Multimedia
                 {
                     if (audioPlayCoroutine != null)
                         coroutineStarter.StopCoroutine(audioPlayCoroutine);
-                    backgroundWorker.CancelAsync();
 
                     if (audioSource != null)
                         for (var i = 0; i < SWAP_BUFFER_NUM; i++)
@@ -604,11 +583,8 @@ namespace HTC.UnityPlugin.Multimedia
 
                 if (isAudioEnabled && !isAllAudioChEnabled)
                 {
-                    lock (_lock)
-                    {
-                        if (audioDataBuff != null)
-                            audioDataBuff.Clear();
-                    }
+                    if (audioDataBuff != null)
+                        audioDataBuff.Clear();
 
                     audioProgressTime = firstAudioFrameTime = -1.0;
                     foreach (var src in audioSource) src.Stop();
