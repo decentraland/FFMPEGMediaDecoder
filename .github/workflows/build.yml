@@ -23,17 +23,6 @@ jobs:
       matrix:
         config: 
         - {
-            name: "Windows Latest MSVC",
-            os: windows-latest,
-            artifact: "windows_msvc.7z",
-            build_type: "Release",
-            cc: "cl",
-            cxx: "cl",
-            environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
-            archiver: "7z a",
-            generators: "Visual Studio 16 2019"
-          }
-        - {
             name: "Windows Latest MinGW",
             os: windows-latest,
             artifact: "windows_mingw.7z",
@@ -76,7 +65,7 @@ jobs:
         if: startsWith(matrix.config.os, 'windows')
         run: |
           choco install ninja cmake
-          choco install ffmpeg --version 4.3.2 -my
+          choco install ffmpeg-full
           ninja --version
           cmake --version
         # cmd "${{ matrix.config.environment_script }}"
@@ -85,14 +74,16 @@ jobs:
         if: startsWith(matrix.config.name, 'Ubuntu_Latest_GCC')
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build cmake ffmpeg
+          sudo apt-get install -y ninja-build cmake
+          sudo apt-get install -y ffmpeg ffmpeg-dev libavcodec-dev
           ninja --version
           cmake --version
           gcc --version
       - name: Install dependencies on macOS
         if: startsWith(matrix.config.os, 'macos')
         run: |
-          brew install p7zip cmake ninja ffmpeg@4
+          brew install p7zip cmake ninja
+          brew install ffmpeg libav
           ninja --version
           cmake --version
           
