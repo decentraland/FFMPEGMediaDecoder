@@ -2,38 +2,46 @@
 
 #pragma once
 
+#if defined(_WIN32) && defined(MYLIB_DLL)
+//   Compiling a Windows DLL
+#    define export __declspec(dllexport)
+// Windows or Linux static library, or Linux so
+#else
+#    define export
+#endif
+
 extern "C" {
     // Utils
-    __declspec(dllexport) void nativeCleanAll();
-    __declspec(dllexport) void nativeCleanDestroyedDecoders();
+    export void nativeCleanAll();
+    export void nativeCleanDestroyedDecoders();
 	//	Decoder
-	__declspec(dllexport) int nativeCreateDecoder(const char* filePath, int& id);
-	__declspec(dllexport) int nativeCreateDecoderAsync(const char* filePath, int& id);
-	__declspec(dllexport) int nativeGetDecoderState(int id);
-	__declspec(dllexport) bool nativeStartDecoding(int id);
-    __declspec(dllexport) void nativeScheduleDestroyDecoder(int id);
-	__declspec(dllexport) void nativeDestroyDecoder(int id);
-	__declspec(dllexport) bool nativeIsEOF(int id);
-    __declspec(dllexport) void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady);
-    __declspec(dllexport) void nativeReleaseVideoFrame(int id);
+	export int nativeCreateDecoder(const char* filePath, int& id);
+	export int nativeCreateDecoderAsync(const char* filePath, int& id);
+	export int nativeGetDecoderState(int id);
+	export bool nativeStartDecoding(int id);
+    export void nativeScheduleDestroyDecoder(int id);
+	export void nativeDestroyDecoder(int id);
+	export bool nativeIsEOF(int id);
+    export void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady);
+    export void nativeReleaseVideoFrame(int id);
 	//	Video
-	__declspec(dllexport) bool nativeIsVideoEnabled(int id);
-	__declspec(dllexport) void nativeSetVideoEnable(int id, bool isEnable);
-	__declspec(dllexport) void nativeGetVideoFormat(int id, int& width, int& height, float& totalTime);
-	__declspec(dllexport) void nativeSetVideoTime(int id, float currentTime);
-	__declspec(dllexport) bool nativeIsContentReady(int id);
-	__declspec(dllexport) bool nativeIsVideoBufferFull(int id);
-	__declspec(dllexport) bool nativeIsVideoBufferEmpty(int id);
+	export bool nativeIsVideoEnabled(int id);
+	export void nativeSetVideoEnable(int id, bool isEnable);
+	export void nativeGetVideoFormat(int id, int& width, int& height, float& totalTime);
+	export void nativeSetVideoTime(int id, float currentTime);
+	export bool nativeIsContentReady(int id);
+	export bool nativeIsVideoBufferFull(int id);
+	export bool nativeIsVideoBufferEmpty(int id);
 	//	Audio
-	__declspec(dllexport) bool nativeIsAudioEnabled(int id);
-	__declspec(dllexport) void nativeSetAudioEnable(int id, bool isEnable);
-	__declspec(dllexport) void nativeSetAudioAllChDataEnable(int id, bool isEnable);
-	__declspec(dllexport) void nativeGetAudioFormat(int id, int& channel, int& frequency, float& totalTime);
-	__declspec(dllexport) float nativeGetAudioData(int id, unsigned char** audioData, int& frameSize);
-	__declspec(dllexport) void nativeFreeAudioData(int id);
+	export bool nativeIsAudioEnabled(int id);
+	export void nativeSetAudioEnable(int id, bool isEnable);
+	export void nativeSetAudioAllChDataEnable(int id, bool isEnable);
+	export void nativeGetAudioFormat(int id, int& channel, int& frequency, float& totalTime);
+	export float nativeGetAudioData(int id, unsigned char** audioData, int& frameSize);
+	export void nativeFreeAudioData(int id);
 	//	Seek
-	__declspec(dllexport) void nativeSetSeekTime(int id, float sec);
-	__declspec(dllexport) bool nativeIsSeekOver(int id);
+	export void nativeSetSeekTime(int id, float sec);
+	export bool nativeIsSeekOver(int id);
 	//  Utility
-	__declspec(dllexport) int nativeGetMetaData(const char* filePath, char*** key, char*** value);
+	export int nativeGetMetaData(const char* filePath, char*** key, char*** value);
 }

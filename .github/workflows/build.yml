@@ -65,7 +65,7 @@ jobs:
         if: startsWith(matrix.config.os, 'windows')
         run: |
           choco install ninja cmake
-          choco install ffmpeg-full
+          choco install ffmpeg-full ffmpeg-shared
           ninja --version
           cmake --version
         # cmd "${{ matrix.config.environment_script }}"
@@ -75,7 +75,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build cmake
-          sudo apt-get install -y ffmpeg ffmpeg-dev libavcodec-dev
+          sudo apt-get install -y libavcodec-dev libavformat-dev libswscale-dev
           ninja --version
           cmake --version
           gcc --version
