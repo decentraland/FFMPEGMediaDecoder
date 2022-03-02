@@ -76,6 +76,7 @@ jobs:
         if: startsWith(matrix.config.os, 'windows')
         run: |
           choco install ninja cmake
+          choco install ffmpeg --version 4.3.2 -my
           ninja --version
           cmake --version
         # cmd "${{ matrix.config.environment_script }}"
@@ -84,7 +85,7 @@ jobs:
         if: startsWith(matrix.config.name, 'Ubuntu_Latest_GCC')
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build cmake
+          sudo apt-get install ninja-build cmake ffmpeg
           ninja --version
           cmake --version
           gcc --version
