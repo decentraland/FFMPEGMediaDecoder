@@ -31,7 +31,7 @@ jobs:
             cxx: "g++",
             archiver: "7z a",
             generators: "Ninja",
-            prefix_path: "C:\\Program Files\\FFmpeg\\"
+            prefix_path: "C:/Program Files/FFmpeg/"
           }
         - {
             name: "Ubuntu_Latest_GCC",
