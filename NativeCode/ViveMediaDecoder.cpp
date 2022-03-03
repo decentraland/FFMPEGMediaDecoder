@@ -304,8 +304,8 @@ int nativeGetMetaData(const char* filePath, char*** key, char*** value) {
 	for (int i = 0; i < metaCount; i++) {
 		(*key)[i] = (char*)malloc(strlen(metaKey[i]) + 1);
 		(*value)[i] = (char*)malloc(strlen(metaValue[i]) + 1);
-		strcpy_s((*key)[i], strlen(metaKey[i]) + 1, metaKey[i]);
-		strcpy_s((*value)[i], strlen(metaValue[i]) + 1, metaValue[i]);
+		strcpy((*key)[i], strlen(metaKey[i]) + 1, metaKey[i]);
+		strcpy((*value)[i], strlen(metaValue[i]) + 1, metaValue[i]);
 	}
 
 	free(metaKey);

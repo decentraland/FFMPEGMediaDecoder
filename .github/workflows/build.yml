@@ -31,7 +31,7 @@ jobs:
             cxx: "g++",
             archiver: "7z a",
             generators: "Ninja",
-            prefix_path: "C:\\Program Files\\FFmpeg"
+            prefix_path: "C:\\Program Files\\FFmpeg\\"
           }
         - {
             name: "Ubuntu_Latest_GCC",
@@ -103,7 +103,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} \
             -G "${{ matrix.config.generators }}" \
             -DCMAKE_INSTALL_PREFIX:PATH=instdir \
-            -DCMAKE_PREFIX_PATH=${{ matrix.config.prefix_path }}
+            -DCMAKE_PREFIX_PATH="${{ matrix.config.prefix_path }}"
       - name: Build
         shell: bash
         run: |
