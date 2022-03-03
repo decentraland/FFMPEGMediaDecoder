@@ -88,9 +88,5 @@ namespace HTC.UnityPlugin.Multimedia
 
         [DllImport(NATIVE_LIBRARY_NAME)]
         public static extern bool nativeIsSeekOver(int id);
-
-        //  Utility
-        [DllImport(NATIVE_LIBRARY_NAME)]
-        public static extern int nativeGetMetaData(string filePath, out IntPtr key, out IntPtr value);
     }
 }

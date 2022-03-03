@@ -703,35 +703,6 @@ namespace HTC.UnityPlugin.Multimedia
             setVolume(volume);
         }
 
-        public static void getMetaData(string filePath, out string[] key, out string[] value)
-        {
-            var keyptr = IntPtr.Zero;
-            var valptr = IntPtr.Zero;
-
-            var metaCount = FFMPEGDecoderWrapper.nativeGetMetaData(filePath, out keyptr, out valptr);
-
-            var keys = new IntPtr[metaCount];
-            var vals = new IntPtr[metaCount];
-            Marshal.Copy(keyptr, keys, 0, metaCount);
-            Marshal.Copy(valptr, vals, 0, metaCount);
-
-            var keyArray = new string[metaCount];
-            var valArray = new string[metaCount];
-            for (var i = 0; i < metaCount; i++)
-            {
-                keyArray[i] = Marshal.PtrToStringAnsi(keys[i]);
-                valArray[i] = Marshal.PtrToStringAnsi(vals[i]);
-                Marshal.FreeCoTaskMem(keys[i]);
-                Marshal.FreeCoTaskMem(vals[i]);
-            }
-
-            Marshal.FreeCoTaskMem(keyptr);
-            Marshal.FreeCoTaskMem(valptr);
-
-            key = keyArray;
-            value = valArray;
-        }
-
         public void setAudioEnable(bool isEnable)
         {
             FFMPEGDecoderWrapper.nativeSetAudioEnable(decoderID, isEnable);

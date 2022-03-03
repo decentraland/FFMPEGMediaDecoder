@@ -290,30 +290,6 @@ bool nativeIsVideoBufferEmpty(int id) {
 	return videoCtx->avhandler->isVideoBufferEmpty();
 }
 
-int nativeGetMetaData(const char* filePath, char*** key, char*** value) {
-    std::unique_ptr<AVHandler> avHandler = std::make_unique<AVHandler>();
-	avHandler->init(filePath);
-
-	char** metaKey = nullptr;
-	char** metaValue = nullptr;
-	int metaCount = avHandler->getMetaData(metaKey, metaValue);
-
-	*key = (char**)malloc(sizeof(char*) * metaCount);
-	*value = (char**)malloc(sizeof(char*) * metaCount);
-
-	for (int i = 0; i < metaCount; i++) {
-		(*key)[i] = (char*)malloc(strlen(metaKey[i]) + 1);
-		(*value)[i] = (char*)malloc(strlen(metaValue[i]) + 1);
-		strcpy((*key)[i], strlen(metaKey[i]) + 1, metaKey[i]);
-		strcpy((*value)[i], strlen(metaValue[i]) + 1, metaValue[i]);
-	}
-
-	free(metaKey);
-	free(metaValue);
-
-	return metaCount;
-}
-
 bool nativeIsContentReady(int id) {
     std::shared_ptr<VideoContext> videoCtx;
 	if (!getVideoContext(id, videoCtx)) { return false; }

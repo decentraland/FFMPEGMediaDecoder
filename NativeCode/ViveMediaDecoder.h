@@ -42,6 +42,4 @@ extern "C" {
 	//	Seek
 	export void nativeSetSeekTime(int id, float sec);
 	export bool nativeIsSeekOver(int id);
-	//  Utility
-	export int nativeGetMetaData(const char* filePath, char*** key, char*** value);
 }
