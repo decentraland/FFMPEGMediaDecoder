@@ -87,7 +87,7 @@ jobs:
         if: startsWith(matrix.config.os, 'macos')
         run: |
           brew install p7zip cmake ninja
-          brew install ffmpeg@4 libav
+          brew install ffmpeg libav
           ninja --version
           cmake --version
           
