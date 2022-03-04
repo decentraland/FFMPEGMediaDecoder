@@ -37,3 +37,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${AVCODEC_LIBRARY} ${AVFORMAT_LIBRA
 
 add_executable(${PROJECT_NAME}_Test main.c)
 target_link_libraries(${PROJECT_NAME}_Test PRIVATE ${PROJECT_NAME})
+
+install(TARGETS ${PROJECT_NAME}_Test DESTINATION bin)
+install(TARGETS ${PROJECT_NAME} DESTINATION lib)
