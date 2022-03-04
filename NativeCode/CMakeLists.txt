@@ -31,9 +31,9 @@ set(SOURCE_FILES
 # Add executable target with source files listed in SOURCE_FILES variable
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
-
 target_include_directories(${PROJECT_NAME} PUBLIC ${AVCODEC_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR} ${AVUTIL_INCLUDE_DIR} ${AVDEVICE_INCLUDE_DIR} ${SWRESAMPLE_INCLUDE_DIR} ${SWRESAMPLE_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${AVCODEC_LIBRARY} ${AVFORMAT_LIBRARY} ${AVUTIL_LIBRARY} ${AVDEVICE_LIBRARY} ${SWRESAMPLE_LIBRARY} ${SWSCALE_LIBRARY})
+target_link_options(${PROJECT_NAME} PUBLIC -static-libgcc -static-libstdc++)
 
 add_executable(${PROJECT_NAME}_Test main.c)
 target_link_libraries(${PROJECT_NAME}_Test PRIVATE ${PROJECT_NAME})

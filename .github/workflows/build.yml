@@ -118,7 +118,7 @@ jobs:
 
       - name: Pack
         shell: bash
-        working-directory: instdir
+        working-directory: NativeCode/instdir
         run: |
           ls -laR
           ${{ matrix.config.archiver }} ../${{ matrix.config.artifact }} .
