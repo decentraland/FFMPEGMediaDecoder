@@ -83,6 +83,8 @@ jobs:
           ninja --version
           cmake --version
           gcc --version
+          ls -la /usr/local/opt/ffmpeg/lib/
+
       - name: Install dependencies on macOS
         if: startsWith(matrix.config.os, 'macos')
         run: |
@@ -90,6 +92,7 @@ jobs:
           brew install ffmpeg libav
           ninja --version
           cmake --version
+          ls -la /usr/local/opt/ffmpeg/lib/
           
       - name: Configure
         shell: bash
