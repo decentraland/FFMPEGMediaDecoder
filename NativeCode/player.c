@@ -1,55 +1,64 @@
-VideoPlayerContext* playerCreate(const char* path)
-{
+#include "player.h"
+#include "logger.h"
 
+VideoPlayerContext* playerCreate(const char* url)
+{
+  logging("playerCreate %s\n", url);
+  VideoPlayerContext* vpc = (VideoPlayerContext*)calloc(1, sizeof(VideoPlayerContext));
+  vpc->dectx = create(url);
+  return vpc;
 }
 
 void playerDestroy(VideoPlayerContext* vpc)
 {
-
+  logging("playerDestroy\n");
+  free(vpc);
 }
 
 void playerPlay(VideoPlayerContext* vpc)
 {
-
+  logging("playerPlay\n");
 }
+
 void playerStop(VideoPlayerContext* vpc)
 {
-
+  logging("playerStop\n");
 }
 
-bool playerIsPlaying(VideoPlayerContext* vpc) const
+int playerIsPlaying(VideoPlayerContext* vpc)
+{
+  logging("playerIsPlaying\n");
+  return 0;
+}
+
+void playerSetPaused(VideoPlayerContext* vpc, int paused)
+{
+  logging("playerSetPaused\n");
+}
+
+int playerIsPaused(VideoPlayerContext* vpc)
+{
+  return 0;
+}
+
+void playerSetLoop(VideoPlayerContext* vpc, int loop)
 {
 
 }
 
-void playerSetPaused(VideoPlayerContext* vpc, bool paused)
+int playerHasLoop(VideoPlayerContext* vpc)
 {
-
+  return 0;
 }
 
-bool playerIsPaused(VideoPlayerContext* vpc) const
+float playerGetLength(VideoPlayerContext* vpc)
 {
-
+  return 0.0f;
 }
 
-void playerSetLoop(VideoPlayerContext* vpc, bool loop)
+float playerGetPlaybackPosition(VideoPlayerContext* vpc)
 {
-
-}
-
-bool playerHasLoop(VideoPlayerContext* vpc) const
-{
-
-}
-
-float playerGetLength(VideoPlayerContext* vpc) const
-{
-
-}
-
-float playerGetPlaybackPosition(VideoPlayerContext* vpc) const
-{
-
+  return 0.0f;
 }
 
 void playerSeek(VideoPlayerContext* vpc, float time)

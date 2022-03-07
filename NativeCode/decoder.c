@@ -247,13 +247,13 @@ AVFrame* process_video_frame(AVFrame* frame, int frameNumber)
 AVFrame* process_audio_frame(DecoderContext* dectx)
 {
   AVFrame* frame = dectx->pFrame;
-	AVFrame* frameConverted = av_frame_alloc();
-	frameConverted->sample_rate = frame->sample_rate;
-	frameConverted->channel_layout = av_get_default_channel_layout(dectx->audio_channels);
-	frameConverted->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
-	frameConverted->best_effort_timestamp = frame->best_effort_timestamp;
-	swr_convert_frame(dectx->swr_ctx, frameConverted, frame);
-  return frame;
+  AVFrame* frameConverted = av_frame_alloc();
+  frameConverted->sample_rate = frame->sample_rate;
+  frameConverted->channel_layout = av_get_default_channel_layout(dectx->audio_channels);
+  frameConverted->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
+  frameConverted->best_effort_timestamp = frame->best_effort_timestamp;
+  swr_convert_frame(dectx->swr_ctx, frameConverted, frame);
+  return frameConverted;
 }
 
 int process_frame(DecoderContext* dectx, ProcessOutput* processOutput)
