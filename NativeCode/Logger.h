@@ -1,3 +1,5 @@
+#pragma once
+
 static void logging(const char *fmt, ...)
 {
     va_list args;

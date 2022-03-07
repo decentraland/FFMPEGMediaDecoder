@@ -26,7 +26,7 @@ find_library(SWSCALE_LIBRARY swscale)
 
 # Add main.cpp file of project root directory as source file
 set(SOURCE_FILES 
-    VideoPlayer.c)
+    decoder.c)
 
 # Add executable target with source files listed in SOURCE_FILES variable
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})

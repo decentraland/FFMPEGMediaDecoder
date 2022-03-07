@@ -1,7 +1,6 @@
-#include "VideoPlayer.h"
-#include "Logger.h"
+#include "decoder.h"
+#include "logger.h"
 
-#include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 #include <libavutil/avutil.h>
 #include <libavutil/imgutils.h>
@@ -9,7 +8,7 @@
 static int lastID = 0;
 
 int fill_stream_info(AVStream *avs, AVCodec **avc, AVCodecContext **avcc) {
-  *avc = avcodec_find_decoder(avs->codecpar->codec_id);
+  *avc = (AVCodec*)avcodec_find_decoder(avs->codecpar->codec_id);
   if (!*avc) {logging("failed to find the codec"); return -1;}
 
   *avcc = avcodec_alloc_context3(*avc);
@@ -21,23 +20,49 @@ int fill_stream_info(AVStream *avs, AVCodec **avc, AVCodecContext **avcc) {
   return 0;
 }
 
-void prepare_swr(VideoPlayerContext *vpc) {
-  
+int prepare_swr(DecoderContext *dectx) {
+  int errorCode = 0;
+  int64_t inChannelLayout = av_get_default_channel_layout(dectx->audio_avcc->channels);
+	uint64_t outChannelLayout = inChannelLayout;
+	enum AVSampleFormat inSampleFormat = dectx->audio_avcc->sample_fmt;
+	enum AVSampleFormat outSampleFormat = AV_SAMPLE_FMT_FLT;
+	int inSampleRate = dectx->audio_avcc->sample_rate;
+	int outSampleRate = inSampleRate;
+
+	if (dectx->swr_ctx != NULL) {
+		swr_close(dectx->swr_ctx);
+		swr_free(&dectx->swr_ctx);
+		dectx->swr_ctx = NULL;
+	}
+
+	dectx->swr_ctx = swr_alloc_set_opts(NULL,
+		outChannelLayout, outSampleFormat, outSampleRate,
+		inChannelLayout, inSampleFormat, inSampleRate,
+		0, NULL);
+
+	
+	if (swr_is_initialized(dectx->swr_ctx) == 0) {
+		errorCode = swr_init(dectx->swr_ctx);
+	}
+
+  dectx->audio_channels = av_get_channel_layout_nb_channels(outChannelLayout);
+  return errorCode;
 }
 
-int prepare_decoder(VideoPlayerContext *vpc) {
+int prepare_decoder(DecoderContext *dectx) {
   logging("preparing decoder");
-  for (int i = 0; i < vpc->pFormatContext->nb_streams; i++) {
-    if (vpc->pFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-      vpc->video_avs = vpc->pFormatContext->streams[i];
-      vpc->video_index = i;
+  for (int i = 0; i < dectx->pFormatContext->nb_streams; i++) {
+    if (dectx->pFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+      dectx->video_avs = dectx->pFormatContext->streams[i];
+      dectx->video_index = i;
 
-      if (fill_stream_info(vpc->video_avs, &vpc->video_avc, &vpc->video_avcc)) {return -1;}
-    } else if (vpc->pFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-      vpc->audio_avs = vpc->pFormatContext->streams[i];
-      vpc->audio_index = i;
+      if (fill_stream_info(dectx->video_avs, &dectx->video_avc, &dectx->video_avcc)) {return -1;}
+      prepare_swr(dectx);
+    } else if (dectx->pFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+      dectx->audio_avs = dectx->pFormatContext->streams[i];
+      dectx->audio_index = i;
 
-      if (fill_stream_info(vpc->audio_avs, &vpc->audio_avc, &vpc->audio_avcc)) {return -1;}
+      if (fill_stream_info(dectx->audio_avs, &dectx->audio_avc, &dectx->audio_avcc)) {return -1;}
     } else {
       logging("skipping streams other than audio and video");
     }
@@ -47,16 +72,16 @@ int prepare_decoder(VideoPlayerContext *vpc) {
   return 0;
 }
 
-VideoPlayerContext* create(const char* url)
+DecoderContext* create(const char* url)
 {
-  VideoPlayerContext* vpc = (VideoPlayerContext*) calloc(1, sizeof(VideoPlayerContext));
+  DecoderContext* dectx = (DecoderContext*) calloc(1, sizeof(DecoderContext));
   logging("initializing all the containers, codecs and protocols.");
 
   // AVFormatContext holds the header information from the format (Container)
   // Allocating memory for this component
   // http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
-  vpc->pFormatContext = avformat_alloc_context();
-  if (!vpc->pFormatContext) {
+  dectx->pFormatContext = avformat_alloc_context();
+  if (!dectx->pFormatContext) {
     logging("ERROR could not allocate memory for Format Context");
     return NULL;
   }
@@ -69,7 +94,7 @@ VideoPlayerContext* create(const char* url)
   // AVInputFormat (if you pass NULL it'll do the auto detect)
   // and AVDictionary (which are options to the demuxer)
   // http://ffmpeg.org/doxygen/trunk/group__lavf__decoding.html#ga31d601155e9035d5b0e7efedc894ee49
-  if (avformat_open_input(&vpc->pFormatContext, url, NULL, NULL) != 0) {
+  if (avformat_open_input(&dectx->pFormatContext, url, NULL, NULL) != 0) {
     logging("ERROR could not open the file");
     return NULL;
   }
@@ -77,23 +102,23 @@ VideoPlayerContext* create(const char* url)
   // now we have access to some information about our file
   // since we read its header we can say what format (container) it's
   // and some other information related to the format itself.
-  logging("format %s, duration %lld us, bit_rate %lld", vpc->pFormatContext->iformat->name, vpc->pFormatContext->duration, vpc->pFormatContext->bit_rate);
+  logging("format %s, duration %lld us, bit_rate %lld", dectx->pFormatContext->iformat->name, dectx->pFormatContext->duration, dectx->pFormatContext->bit_rate);
 
   logging("finding stream info from format");
   // read Packets from the Format to get stream information
-  // this function populates vpc->pFormatContext->streams
-  // (of size equals to vpc->pFormatContext->nb_streams)
+  // this function populates dectx->pFormatContext->streams
+  // (of size equals to dectx->pFormatContext->nb_streams)
   // the arguments are:
   // the AVFormatContext
   // and options contains options for codec corresponding to i-th stream.
   // On return each dictionary will be filled with options that were not found.
   // https://ffmpeg.org/doxygen/trunk/group__lavf__decoding.html#gad42172e27cddafb81096939783b157bb
-  if (avformat_find_stream_info(vpc->pFormatContext,  NULL) < 0) {
+  if (avformat_find_stream_info(dectx->pFormatContext,  NULL) < 0) {
     logging("ERROR could not get the stream info");
     return NULL;
   }
 
-  if (prepare_decoder(vpc)) {
+  if (prepare_decoder(dectx)) {
     logging("ERROR could not prepare the decoder");
     return NULL;
   }
@@ -112,9 +137,9 @@ VideoPlayerContext* create(const char* url)
     return NULL;
   }
 
-  vpc->pFrame = pFrame;
-  vpc->pPacket = pPacket;
-  return vpc;
+  dectx->pFrame = pFrame;
+  dectx->pPacket = pPacket;
+  return dectx;
 }
 
 
@@ -218,49 +243,61 @@ void process_video_frame(AVFrame* frame, int frameNumber)
   convert_to_rgb24(frame, frameNumber);
 }
 
-void process_audio_frame(AVFrame* frame, int frameNumber)
+void process_audio_frame(DecoderContext* dectx)
 {
-
+  AVFrame* frame = dectx->pFrame;
+	AVFrame* frameConverted = av_frame_alloc();
+	frameConverted->sample_rate = frame->sample_rate;
+	frameConverted->channel_layout = av_get_default_channel_layout(dectx->audio_channels);
+	frameConverted->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
+	frameConverted->best_effort_timestamp = frame->best_effort_timestamp;
+	swr_convert_frame(dectx->swr_ctx, frameConverted, frame);
 }
 
-int process_frame(VideoPlayerContext* vpContext)
+int process_frame(DecoderContext* dectx)
 {
   int res = -1;
   // fill the Packet with data from the Stream
   // https://ffmpeg.org/doxygen/trunk/group__lavf__decoding.html#ga4fdb3084415a82e3810de6ee60e46a61
-  if (av_read_frame(vpContext->pFormatContext, vpContext->pPacket) >= 0)
+  if (av_read_frame(dectx->pFormatContext, dectx->pPacket) >= 0)
   {
-    if (vpContext->pPacket->stream_index == vpContext->video_index) {
-      logging("[VIDEO] AVPacket->pts %" PRId64, vpContext->pPacket->pts);
-      res = decode_packet(vpContext->video_avcc, vpContext->pPacket, vpContext->pFrame);
+    if (dectx->pPacket->stream_index == dectx->video_index) {
+      logging("[VIDEO] AVPacket->pts %" PRId64, dectx->pPacket->pts);
+      res = decode_packet(dectx->video_avcc, dectx->pPacket, dectx->pFrame);
       if (res < 0)
         return -1;
-      process_video_frame(vpContext->pFrame, vpContext->audio_avcc->frame_number);
-    } else if (vpContext->pPacket->stream_index == vpContext->audio_index) {
-      logging("[AUDIO] AVPacket->pts %" PRId64, vpContext->pPacket->pts);
-      res = decode_packet(vpContext->audio_avcc, vpContext->pPacket, vpContext->pFrame);
+      process_video_frame(dectx->pFrame, dectx->audio_avcc->frame_number);
+    } else if (dectx->pPacket->stream_index == dectx->audio_index) {
+      logging("[AUDIO] AVPacket->pts %" PRId64, dectx->pPacket->pts);
+      res = decode_packet(dectx->audio_avcc, dectx->pPacket, dectx->pFrame);
       if (res < 0)
         return -1;
-      process_audio_frame(vpContext->pFrame, vpContext->audio_avcc->frame_number);
+      process_audio_frame(dectx);
     }
 
     res = 0;
     // https://ffmpeg.org/doxygen/trunk/group__lavc__packet.html#ga63d5a489b419bd5d45cfd09091cbcbc2
-    av_packet_unref(vpContext->pPacket);
+    av_packet_unref(dectx->pPacket);
   }
 
   return res;
 }
 
-void destroy(VideoPlayerContext* vpContext)
+void destroy(DecoderContext* dectx)
 {
   logging("releasing all the resources");
 
-  avformat_close_input(&vpContext->pFormatContext);
-  av_packet_free(&vpContext->pPacket);
-  av_frame_free(&vpContext->pFrame);
-  avcodec_free_context(&vpContext->video_avcc);
-  avcodec_free_context(&vpContext->audio_avcc);
+  avformat_close_input(&dectx->pFormatContext);
+  av_packet_free(&dectx->pPacket);
+  av_frame_free(&dectx->pFrame);
+  avcodec_free_context(&dectx->video_avcc);
+  avcodec_free_context(&dectx->audio_avcc);
 
-  free(vpContext);
+	if (dectx->swr_ctx != NULL) {
+		swr_close(dectx->swr_ctx);
+		swr_free(&dectx->swr_ctx);
+		dectx->swr_ctx = NULL;
+	}
+
+  free(dectx);
 }

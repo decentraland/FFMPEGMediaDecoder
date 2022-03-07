@@ -7,8 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <libswresample/swresample.h>
 
-typedef struct VideoPlayerContext
+typedef struct DecoderContext
 {
   // AVFormatContext holds the header information from the format (Container)
   // Allocating memory for this component
@@ -29,12 +30,15 @@ typedef struct VideoPlayerContext
 
   // https://ffmpeg.org/doxygen/trunk/structAVPacket.html
   AVPacket *pPacket;
-} VideoPlayerContext;
 
-VideoPlayerContext* create(const char* url);
+  SwrContext*	swr_ctx;
+  unsigned int audio_channels;
+} DecoderContext;
+
+DecoderContext* create(const char* url);
 
 int decode_packet(AVCodecContext *avcc, AVPacket *pPacket, AVFrame *pFrame);
 
-int process_frame(VideoPlayerContext* vpContext);
+int process_frame(DecoderContext* vpContext);
 
-void destroy(VideoPlayerContext* vpContext);
+void destroy(DecoderContext* vpContext);

@@ -1,10 +1,10 @@
-#include "VideoPlayer.h"
-#include "Logger.h"
+#include "decoder.h"
+#include "logger.h"
 int main()
 {
     logging("Hello world\n");
 
-    VideoPlayerContext* vpContext = create("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4");
+    DecoderContext* vpContext = create("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4");
     if (vpContext == NULL)
     {
         logging("error on create");
