@@ -29,19 +29,25 @@ set(SOURCE_FILES
     decoder.c
     player.c)
 
+set(AVLIBRARIES ${AVCODEC_LIBRARY} ${AVFORMAT_LIBRARY} ${AVUTIL_LIBRARY} ${AVDEVICE_LIBRARY} ${SWRESAMPLE_LIBRARY} ${SWSCALE_LIBRARY})
 # Add executable target with source files listed in SOURCE_FILES variable
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${AVCODEC_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR} ${AVUTIL_INCLUDE_DIR} ${AVDEVICE_INCLUDE_DIR} ${SWRESAMPLE_INCLUDE_DIR} ${SWRESAMPLE_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${AVCODEC_LIBRARY} ${AVFORMAT_LIBRARY} ${AVUTIL_LIBRARY} ${AVDEVICE_LIBRARY} ${SWRESAMPLE_LIBRARY} ${SWSCALE_LIBRARY})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${AVLIBRARIES})
 
 #target_link_options(${PROJECT_NAME} PUBLIC -static-libgcc -static-libstdc++)
 
 add_executable(${PROJECT_NAME}_Test main.c)
 target_link_libraries(${PROJECT_NAME}_Test PRIVATE ${PROJECT_NAME})
 
-install(TARGETS ${PROJECT_NAME}_Test DESTINATION bin)
-install(TARGETS ${PROJECT_NAME} DESTINATION lib)
-install(FILES ${AVCODEC_LIBRARY} ${AVFORMAT_LIBRARY} ${AVUTIL_LIBRARY} ${AVDEVICE_LIBRARY} ${SWRESAMPLE_LIBRARY} ${SWSCALE_LIBRARY} DESTINATION lib)
+set (installPath ${CMAKE_SYSTEM_NAME}-${CMAKE_HOST_SYSTEM_PROCESSOR})
+set (resolvedLibraries "")
+foreach (_file ${AVLIBRARIES})
+    get_filename_component(_resolvedFile "${_file}" REALPATH)
+    list (APPEND resolvedLibraries "${_resolvedFile}")
+endforeach()
+install(FILES ${resolvedLibraries} DESTINATION ${installPath})
+install(TARGETS ${PROJECT_NAME} DESTINATION ${installPath})
 
-message(${AVCODEC_LIBRARY})
+message(${CMAKE_SYSTEM_NAME}-${CMAKE_HOST_SYSTEM_PROCESSOR})
