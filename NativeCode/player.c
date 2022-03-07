@@ -1,5 +1,5 @@
 #include "player.h"
-#include "logger.h"
+#include "l.h"
 
 VideoPlayerContext* playerCreate(const char* url)
 {

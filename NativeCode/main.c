@@ -1,6 +1,6 @@
 //#include "decoder.h"
 #include "player.h"
-#include "logger.h"
+#include "l.h"
 
 /*int runDecoder()
 {
