@@ -35,10 +35,16 @@ typedef struct DecoderContext
   unsigned int audio_channels;
 } DecoderContext;
 
+typedef struct ProcessOutput
+{
+  AVFrame *videoFrame;
+  AVFrame *audioFrame;
+} ProcessOutput;
+
 DecoderContext* create(const char* url);
 
 int decode_packet(AVCodecContext *avcc, AVPacket *pPacket, AVFrame *pFrame);
 
-int process_frame(DecoderContext* vpContext);
+int process_frame(DecoderContext* vpContext, ProcessOutput* processOutput);
 
 void destroy(DecoderContext* vpContext);

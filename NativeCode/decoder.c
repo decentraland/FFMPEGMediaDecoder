@@ -159,7 +159,7 @@ static void save_ppm_frame(unsigned char *buf, int wrap, int xsize, int ysize, c
 }
 
 
-void convert_to_rgb24(AVFrame *srcFrame, int frameNumber)
+AVFrame* convert_to_rgb24(AVFrame *srcFrame, int frameNumber)
 {
   int width = srcFrame->width;
   int height = srcFrame->height;
@@ -194,8 +194,9 @@ void convert_to_rgb24(AVFrame *srcFrame, int frameNumber)
 
   char frame_filename[1024];
   snprintf(frame_filename, sizeof(frame_filename), "out/%s-%d.ppm", "frame", frameNumber);
-
   save_ppm_frame(dstFrame->data[0], dstFrame->linesize[0], dstFrame->width, dstFrame->height, frame_filename);
+
+  return dstFrame;
 }
 
 int decode_packet(AVCodecContext *avcc, AVPacket *pPacket, AVFrame *pFrame)
@@ -238,12 +239,12 @@ int decode_packet(AVCodecContext *avcc, AVPacket *pPacket, AVFrame *pFrame)
   return -1;
 }
 
-void process_video_frame(AVFrame* frame, int frameNumber)
+AVFrame* process_video_frame(AVFrame* frame, int frameNumber)
 {
-  convert_to_rgb24(frame, frameNumber);
+  return convert_to_rgb24(frame, frameNumber);
 }
 
-void process_audio_frame(DecoderContext* dectx)
+AVFrame* process_audio_frame(DecoderContext* dectx)
 {
   AVFrame* frame = dectx->pFrame;
 	AVFrame* frameConverted = av_frame_alloc();
@@ -252,10 +253,13 @@ void process_audio_frame(DecoderContext* dectx)
 	frameConverted->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
 	frameConverted->best_effort_timestamp = frame->best_effort_timestamp;
 	swr_convert_frame(dectx->swr_ctx, frameConverted, frame);
+  return frame;
 }
 
-int process_frame(DecoderContext* dectx)
+int process_frame(DecoderContext* dectx, ProcessOutput* processOutput)
 {
+  processOutput->videoFrame = NULL;
+  processOutput->audioFrame = NULL;
   int res = -1;
   // fill the Packet with data from the Stream
   // https://ffmpeg.org/doxygen/trunk/group__lavf__decoding.html#ga4fdb3084415a82e3810de6ee60e46a61
@@ -266,13 +270,13 @@ int process_frame(DecoderContext* dectx)
       res = decode_packet(dectx->video_avcc, dectx->pPacket, dectx->pFrame);
       if (res < 0)
         return -1;
-      process_video_frame(dectx->pFrame, dectx->audio_avcc->frame_number);
+      processOutput->videoFrame = process_video_frame(dectx->pFrame, dectx->audio_avcc->frame_number);
     } else if (dectx->pPacket->stream_index == dectx->audio_index) {
       logging("[AUDIO] AVPacket->pts %" PRId64, dectx->pPacket->pts);
       res = decode_packet(dectx->audio_avcc, dectx->pPacket, dectx->pFrame);
       if (res < 0)
         return -1;
-      process_audio_frame(dectx);
+      processOutput->audioFrame = process_audio_frame(dectx);
     }
 
     res = 0;
